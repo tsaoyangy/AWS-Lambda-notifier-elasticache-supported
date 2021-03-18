@@ -2,16 +2,27 @@ Transform: AWS::Serverless-2016-10-31
 
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: enterprise-wechat-lambda-layer
-    Description: Enterprise Wechat Lambda Layer - Produced by Niko Feng(nikosheng@gmail.com)
-    Author: nikosheng
+    Name: WeChat-Notifier
+    Description: Wechat Notifier for Eventbridge
+    Author: Randy Lin
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README.md
-    Labels: ['wechat', 'lambda-layer']
-    HomePageUrl: https://github.com/nikosheng/wechat-lambda-layer-sam
-    SemanticVersion: 1.0.5
-    SourceCodeUrl: https://github.com/nikosheng/wechat-lambda-layer-sam
+    Labels: ['wechat', 'Eventbridge']
+    HomePageUrl: https://github.com/linjungz/wechat-lambda-layer-sam
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/linjungz/wechat-lambda-layer-sam
+
+Parameters:
+  CORPIDParameter:
+    Type: String
+    Description: "企业ID"
+  CORPSECRETParameter:
+    Type: String
+    Description: "应用Secret"
+  AGENTIDParameter:
+    Type: String
+    Description: "应用AgentId"
 
 Resources:
   WechatLambdaLayer:
@@ -25,7 +36,28 @@ Resources:
       - python3.7
       - python3.8
 
-Outputs:
-  WechatLambdaLayer:
-    Value:
-      Ref: WechatLambdaLayer
+  WeChatNotifier:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: notifier/
+      Handler: app.lambda_handler
+      Layers: 
+        - !Ref WechatLambdaLayer
+      Environment:
+        Variables:
+          CORPID: 
+            Ref: CORPIDParameter
+          CORPSECRET: 
+            Ref: CORPSECRETParameter
+          AGENTID: 
+            Ref: AGENTIDParameter
+      Runtime: python3.8
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties: 
+            Topic: !Ref Notifier
+          
+  Notifier:
+    Type: AWS::SNS::Topic
+
