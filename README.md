@@ -1,50 +1,18 @@
-# wechat-lambda-layer-sam
+# WeChat-Notifier 微信告警通知
 
-### Deploy in Serverless Application Repository
-
-
-- Login AWS Console and navigate to `Serverless Application Repository` service.
-- Search `enterprise-wechat-lambda-layer` in `Available Applications`
-- Press `Deploy` button to deploy the lambda layer to your account
-- Navigate to `Lambda` service and find out the layer is already deployed or not
+### 在 Serverless Application Repository 中部署此应用
 
 
-### Usage
+- 登陆 AWS Console 并切换至 `Serverless Application Repository`服务
+- 搜索 `WeChat-Notifier` 找到这个Serverless应用，点击进入部署页面
+- 输入企业微信配置相关参数然后点击`部署`即可
 
-**Please Make Sure to Input Corporation ID / Corporation Secret in Lambda Evironment Variables**
+### 使用
 
-**使用该Lambda Layer 请务必设置调用Lambda内微信的CorpId和CorpSecret环境变量以获取Access Token 调用微信接口**
+本应用会部署出一个Lambda函数用于将消息发送至企业微信，同时也部署一个SNS Topic并配置Lambda做为Subscription. 用户可以将消息发送至 SNS Topic 即可触发 Lambda 将消息发送给企业微信。 
 
-```
-import json
-import os
-from wechat import Wechat
-from alarm import Alarm
+EventBridge 中也可以创建 Rule ，将AWS相关的事件推送至企业微信。
 
-def handler(event, context):
-    corpId = os.environ['CORPID']
-    corpSecret = os.environ['CORPSECRET']
-    wechat = Wechat(corpId, corpSecret)
-    wxAlarm = Alarm(
-        toUser = "@all",  #成员ID列表（消息接收者，多个接收者用‘|’分隔，最多支持1000个）。特殊情况：指定为@all，则向关注该企业应用的全部成员发送
-        toParty = "",     #部门ID列表，多个接收者用‘|’分隔，最多支持100个。当touser为@all时忽略本参数
-        toTag = "",       #标签ID列表，多个接收者用‘|’分隔，最多支持100个。当touser为@all时忽略本参数
-        agentId = 1000002,
-        title = "AWS 告警信息",
-        description = "<div class=\"grey\">{0}</div> <div class=\"highlight\">{1}</div>".format(event['Records'][0]['Sns']['Timestamp'], event['Records'][0]['Sns']['Subject']),
-        url = "URL"
-    )
-    body = wechat.send_msg(wxAlarm)
+### 致谢
 
-    response = {
-        "statusCode": 200,
-        "body": json.dumps(body)
-    }
-
-    return response
-```
-
-
-
-Happy Building!  
-Niko (nikosheng@gmail.com)
+本项目使用的企业微信对接代码是在 Niko Feng 之前[项目](https://github.com/nikosheng/wechat-lambda-layer-sam)的基础上增加了异常处理，在此对 Niko 表示感谢！
