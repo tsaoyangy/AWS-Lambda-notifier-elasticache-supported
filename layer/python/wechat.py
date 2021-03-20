@@ -24,7 +24,7 @@ class Wechat:
             # 检查errcode确认调用是否成功
             if content['errcode'] == 0:
                 # 成功
-                print("Successfully got token", content['access_token'])
+                #print("Successfully got token", content['access_token'])
                 return content['access_token']
             else:
                 # 调用失败
@@ -79,7 +79,8 @@ class Wechat:
             content = json.loads(rep.content)
             if content['errcode'] == 0:
                 #成功
-                print('Message Sent.')
+                #print('Message Sent.')
+                pass
             else:
                 raise Exception('Errcode: {} , Errmsg: {}'.format(content['errcode'], content['errmsg']))                    
         else:
