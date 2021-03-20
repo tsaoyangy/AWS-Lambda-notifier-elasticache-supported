@@ -7,11 +7,11 @@ Metadata:
     Author: Randy Lin
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE.txt
-    ReadmeUrl: README.md
-    Labels: ['wechat', 'Eventbridge']
-    HomePageUrl: https://github.com/linjungz/wechat-lambda-layer-sam
-    SemanticVersion: 1.0.0
-    SourceCodeUrl: https://github.com/linjungz/wechat-lambda-layer-sam
+    ReadmeUrl: README_sar.md
+    Labels: ['WeChat', 'Eventbridge']
+    HomePageUrl: https://github.com/linjungz/wechat-notifier
+    SemanticVersion: 2.0.0
+    SourceCodeUrl: https://github.com/linjungz/wechat-notifier
 
 Parameters:
   CORPIDParameter:
@@ -25,10 +25,10 @@ Parameters:
     Description: "应用AgentId"
 
 Resources:
-  WechatLambdaLayer:
+  WeChatNotifierLambdaLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: WechatLayer
+      LayerName: WechatNotifierCommon
       Description: v.1.0.5
       ContentUri: layer/
       CompatibleRuntimes:
@@ -36,28 +36,100 @@ Resources:
       - python3.7
       - python3.8
 
-  WeChatNotifier:
+  WeChatNotifierLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: notifier/
       Handler: app.lambda_handler
       Layers: 
-        - !Ref WechatLambdaLayer
+        - !Ref WeChatNotifierLambdaLayer
       Environment:
         Variables:
           CORPID: 
             Ref: CORPIDParameter
-          CORPSECRET: 
-            Ref: CORPSECRETParameter
           AGENTID: 
             Ref: AGENTIDParameter
+          CORPSECRET_ARN: 
+            Ref: CORPSECRET
       Runtime: python3.8
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CORPSECRET
       Events:
         SNSEvent:
           Type: SNS
           Properties: 
-            Topic: !Ref Notifier
+            Topic: !Ref WeChatNotifierSNSTopic
           
-  Notifier:
+  WeChatNotifierSNSTopic:
     Type: AWS::SNS::Topic
+
+  WeChatNotifierSNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Id: SNSTopicPolicyForEventbridge
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Statement-for-Eventbridge
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref WeChatNotifierSNSTopic
+      Topics:
+      - !Ref WeChatNotifierSNSTopic
+
+  CORPSECRET:
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Description: '存储密钥: 应用Secret'
+      SecretString:
+        Ref: CORPSECRETParameter
+
+  EventRuleEC2StateChange:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 微信告警：EC2状态变化
+      EventPattern: 
+        source: 
+          - aws.ec2
+        detail-type: 
+          - EC2 Instance State-change Notification
+      Targets:
+        - Arn: !Ref WeChatNotifierSNSTopic
+          Id: Send2SNS
+          InputTransformer:
+            InputPathsMap:
+              instance-id: "$.detail.instance-id"
+              region: "$.region"
+              state: "$.detail.state"
+              time: "$.time"
+            InputTemplate:
+              "\"EC2状态变化告警: \\n时间: <time> \\n区域: <region> \\n实例id: <instance-id> \\n状态: <state>\""
+
+  EventRuleEC2Health:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 微信告警：EC2健康事件
+      EventPattern: 
+        source: 
+          - aws.health
+        detail-type: 
+          - AWS Health Event
+        detail:
+          service:
+            - EC2
+      Targets:
+        - Arn: !Ref WeChatNotifierSNSTopic
+          Id: Send2SNS
+          InputTransformer:
+            InputPathsMap:
+              resource: "$.resources[0]"
+              region: "$.region"
+              time: "$.time"
+              type: "$.detail.eventTypeCode"
+              desc: "$.detail.eventDescription[0].latestDescription"
+            InputTemplate:
+              "\"EC2健康事件: \\n时间: <time> \\n区域: <region> \\n受影响资源: <resource> \\n类型: <type> \\n描述: <desc>\""
 
