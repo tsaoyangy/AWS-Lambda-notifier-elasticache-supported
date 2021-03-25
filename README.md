@@ -20,6 +20,11 @@
 
 本项目使用的企业微信对接代码是在 Niko Feng 之前[项目](https://github.com/nikosheng/wechat-lambda-layer-sam)的基础上增加了异常处理和将密钥保存在Secrets Manager等调整。在此对 Niko 表示感谢！
 
+## 更新历史
+
+2021-03-25:
+调整 SNS Access Policy，权限由原来只能由 SNS 所在帐号 EventBridge 发布消息，改为由 SNS 所在帐号所有 AWS 服务均可发布消息，方便用户从其他 AWS 服务如 RDS 等设置事件通知告警并通知微信
+
 ## 附录
 
 [AWS博客：企业微信、钉钉接收 Amazon CloudWatch 告警

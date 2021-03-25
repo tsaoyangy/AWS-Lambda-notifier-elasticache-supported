@@ -68,15 +68,19 @@ Resources:
     Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
-        Id: SNSTopicPolicyForEventbridge
+        Id: SNSTopicPolicy
         Version: '2012-10-17'
         Statement:
-          - Sid: Statement-for-Eventbridge
+          - Sid: Default_Statement
             Effect: Allow
             Principal:
-              Service: events.amazonaws.com
-            Action: sns:Publish
+              AWS: "*"
+            Action: 
+              - sns:Publish
             Resource: !Ref WeChatNotifierSNSTopic
+            Condition:
+              StringEquals:
+                "AWS:SourceOwner": !Ref "AWS::AccountId"
       Topics:
       - !Ref WeChatNotifierSNSTopic
 
