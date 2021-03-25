@@ -10,7 +10,7 @@ Metadata:
     ReadmeUrl: README_sar.md
     Labels: ['WeChat', 'Eventbridge']
     HomePageUrl: https://github.com/linjungz/wechat-notifier
-    SemanticVersion: 1.0.0
+    SemanticVersion: 1.1.0
     SourceCodeUrl: https://github.com/linjungz/wechat-notifier
 
 Parameters:
