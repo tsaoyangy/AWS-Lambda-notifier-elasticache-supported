@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: WeChat-Notifier
-    Description: Wechat Notifier for Eventbridge
+    Description: Wechat Notifier
     Author: Randy Lin
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE.txt
