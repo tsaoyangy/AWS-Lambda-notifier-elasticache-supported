@@ -20,12 +20,10 @@ corpSecret = get_secret_value_response['SecretString']
 wechat = Wechat(corpId, corpSecret)
 
 def lambda_handler(event, context):
-    #消息来源是SNS，取 $.Records[0].Sns.Message，并对字符串进行一些处理，确保发送至微信时可以正常显示
-    msg = event['Records'][0]['Sns']['Message']
-    msg = msg.replace("\\n", "\n")
-    if msg[0] == '\"' and msg[-1] == '\"' :
-        msg = msg[1:-1]
-    
+    print(event)
+    msg = msg_format(event) 
+    print(msg)
+
     wxAlarm = Alarm(
         toUser = "@all",  #成员ID列表（消息接收者，多个接收者用‘|’分隔，最多支持1000个）。特殊情况：指定为@all，则向关注该企业应用的全部成员发送
         toParty = "",     #部门ID列表，多个接收者用‘|’分隔，最多支持100个。当touser为@all时忽略本参数
@@ -38,7 +36,24 @@ def lambda_handler(event, context):
     
     response = {
         "statusCode": 200,
-        "body": "Message Sent to WeChat."
+        "body": "Message Sent."
     }
 
     return response
+
+def msg_format(event):
+    try:
+        #消息来源是SNS，取 $.Records[0].Sns.Message，并对字符串进行一些处理，确保发送至微信时可以正常显示
+        msg = event['Records'][0]['Sns']['Message']
+        
+        #进行字符串处理后返回，以确保IM客户端正确显示
+        msg = msg.replace("\\n", "\n")
+        if msg[0] == '\"' and msg[-1] == '\"' :
+            msg = msg[1:-1]
+
+        return msg
+    except:
+        #消息来源不是SNS，直接返回
+        return event
+
+    
