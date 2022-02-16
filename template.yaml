@@ -2,69 +2,76 @@ Transform: AWS::Serverless-2016-10-31
 
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: WeChat-Notifier
-    Description: Wechat Notifier
-    Author: Randy Lin
+    Name: DingTalk-Notifier
+    Description: DingTalk Notifier
+    Author: Chris He
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README_sar.md
-    Labels: ['WeChat', 'Eventbridge']
-    HomePageUrl: https://github.com/linjungz/wechat-notifier
+    Labels: ['DingTalk', 'Eventbridge']
+    HomePageUrl: https://github.com/Chris-wa-He/DingTalk-notifier
     SemanticVersion: 1.2.0
-    SourceCodeUrl: https://github.com/linjungz/wechat-notifier
+    SourceCodeUrl: https://github.com/Chris-wa-He/DingTalk-notifier
+
 
 Parameters:
-  CORPIDParameter:
+#  CORPIDParameter:
+#    Type: String
+#    Description: "企业ID"
+#  CORPSECRETParameter:
+#    Type: String
+#    Description: "应用Secret"
+#  AGENTIDParameter:
+#    Type: String
+#    Description: "应用AgentId"
+  TokenParameter:
     Type: String
-    Description: "企业ID"
-  CORPSECRETParameter:
-    Type: String
-    Description: "应用Secret"
-  AGENTIDParameter:
-    Type: String
-    Description: "应用AgentId"
+    Description: "Chat bot security token"
 
 Resources:
-  WeChatNotifierLambdaLayer:
+  DingTalkNotifierLambdaLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: WechatNotifierCommon
+      LayerName: DingTalkNotifierCommon
       Description: v.1.0.5
       ContentUri: layer/
       CompatibleRuntimes:
       - python3.6
       - python3.7
       - python3.8
+      - python3.9
 
-  WeChatNotifierLambda:
+  DingTalkNotifierLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: notifier/
       Handler: app.lambda_handler
       Layers: 
-        - !Ref WeChatNotifierLambdaLayer
+        - !Ref DingTalkNotifierLambdaLayer
       Environment:
         Variables:
-          CORPID: 
-            Ref: CORPIDParameter
-          AGENTID: 
-            Ref: AGENTIDParameter
-          CORPSECRET_ARN: 
-            Ref: CORPSECRET
-      Runtime: python3.8
+#          CORPID:
+#            Ref: CORPIDParameter
+#          AGENTID:
+#            Ref: AGENTIDParameter
+#          CORPSECRET_ARN:
+#            Ref: CORPSECRET
+          TOKEN_ARN:
+            Ref: TOKEN
+      Runtime: python3.9
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref CORPSECRET
+            SecretArn: !Ref TOKEN
       Events:
         SNSEvent:
           Type: SNS
           Properties: 
-            Topic: !Ref WeChatNotifierSNSTopic
+            Topic: !Ref DingTalkNotifierSNSTopic
           
-  WeChatNotifierSNSTopic:
+  DingTalkNotifierSNSTopic:
     Type: AWS::SNS::Topic
 
-  WeChatNotifierSNSTopicPolicy:
+  DingTalkNotifierSNSTopicPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
@@ -77,7 +84,7 @@ Resources:
               AWS: "*"
             Action: 
               - sns:Publish
-            Resource: !Ref WeChatNotifierSNSTopic
+            Resource: !Ref DingTalkNotifierSNSTopic
             Condition:
               StringEquals:
                 "AWS:SourceOwner": !Ref "AWS::AccountId"
@@ -87,21 +94,21 @@ Resources:
               Service: "events.amazonaws.com"
             Action: 
               - sns:Publish
-            Resource: !Ref WeChatNotifierSNSTopic
+            Resource: !Ref DingTalkNotifierSNSTopic
       Topics:
-      - !Ref WeChatNotifierSNSTopic
+      - !Ref DingTalkNotifierSNSTopic
 
-  CORPSECRET:
+  TOKEN:
     Type: AWS::SecretsManager::Secret
     Properties: 
-      Description: '存储密钥: 应用Secret'
+      Description: 'Token: Chat bot token'
       SecretString:
-        Ref: CORPSECRETParameter
+        Ref: TokenParameter
 
   EventRuleEC2StateChange:
     Type: AWS::Events::Rule
     Properties:
-      Description: 微信告警：EC2实例状态变化
+      Description: DingTalk notification：EC2 instance state change
       EventPattern: 
         source: 
           - aws.ec2
@@ -113,7 +120,7 @@ Resources:
             - stopped
             - terminated
       Targets:
-        - Arn: !Ref WeChatNotifierSNSTopic
+        - Arn: !Ref DingTalkNotifierSNSTopic
           Id: Send2SNS
           InputTransformer:
             InputPathsMap:
@@ -127,14 +134,14 @@ Resources:
   EventRuleEC2Health:
     Type: AWS::Events::Rule
     Properties:
-      Description: 微信告警：AWS健康事件
+      Description: DingTalk notification：AWS Health event
       EventPattern: 
         source: 
           - aws.health
         detail-type: 
           - AWS Health Event
       Targets:
-        - Arn: !Ref WeChatNotifierSNSTopic
+        - Arn: !Ref DingTalkNotifierSNSTopic
           Id: Send2SNS
           InputTransformer:
             InputPathsMap:
