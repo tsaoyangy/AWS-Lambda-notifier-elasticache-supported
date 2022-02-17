@@ -15,15 +15,6 @@ Metadata:
 
 
 Parameters:
-#  CORPIDParameter:
-#    Type: String
-#    Description: "企业ID"
-#  CORPSECRETParameter:
-#    Type: String
-#    Description: "应用Secret"
-#  AGENTIDParameter:
-#    Type: String
-#    Description: "应用AgentId"
   TokenParameter:
     Type: String
     Description: "Chat bot security token"
