@@ -9,9 +9,9 @@ Metadata:
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README_sar.md
     Labels: ['DingTalk', 'Eventbridge']
-    HomePageUrl: https://github.com/Chris-wa-He/DingTalk-notifier
+    HomePageUrl: https://github.com/Chris-wa-He/AWS-Lambda-notifier
     SemanticVersion: 1.2.0
-    SourceCodeUrl: https://github.com/Chris-wa-He/DingTalk-notifier
+    SourceCodeUrl: https://github.com/Chris-wa-He/AWS-Lambda-notifier
 
 
 Parameters:
@@ -41,12 +41,6 @@ Resources:
         - !Ref DingTalkNotifierLambdaLayer
       Environment:
         Variables:
-#          CORPID:
-#            Ref: CORPIDParameter
-#          AGENTID:
-#            Ref: AGENTIDParameter
-#          CORPSECRET_ARN:
-#            Ref: CORPSECRET
           TOKEN_ARN:
             Ref: TOKEN
       Runtime: python3.9
