@@ -10,11 +10,28 @@
 
 为方便演示，这个应用部署时创建了两个EventBridge的Rule，一个是捕获EC2的状态变化事件（如开关机），另一个是捕获EC2健康事件（如EC2计划维护事件）。因此部署后可以通过简单的启动或关闭EC2实例来检查是否可以在钉钉收到通知。
 
+## 钉钉机器人创建与 Webhook URL
+
+配置钉钉自定义机器人，请参考[官方说明](https://open.dingtalk.com/document/robots/custom-robot-access)
+
+获取自定义机器人的 Webhook URL，作为部署的参数
+![获取webhook](images/webhook.png)
+
 ## 在 Serverless Application Repository 中部署此应用
 
 可以在 SAR 中搜索 `DingTalk-notifier` 查到本应用（注意因为本项目会创建 EventBridge 到 SNS Publish 权限，所以按下图进行勾选。
 
 ![查找](images/search_sar.png)
+
+部署应用时填入自定义机器人的整个 Webhook URL
+
+![部署](images/deployment.png)
+
+## 提示效果
+
+机器人提示效果如下：
+
+![提示效果](images/notification.png)
 
 ## 致谢
 
