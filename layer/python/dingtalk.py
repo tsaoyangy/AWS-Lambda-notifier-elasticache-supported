@@ -4,14 +4,14 @@ import json
 
 class DingTalk:
     s = requests.session()
-    secretToken = None
+    secretURL = None
 
-    def __init__(self, token):
-        self.secretToken = token
+    def __init__(self, url):
+        self.secretURL = url
 
     # Send text alarm
     def send_text_msg(self, dtAlarm):
-        url = "https://oapi.dingtalk.com/robot/send?access_token=" + self.secretToken
+        url = self.secretURL
         header = {
             "Content-Type": "application/json"
         }

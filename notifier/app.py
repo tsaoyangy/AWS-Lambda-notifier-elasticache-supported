@@ -4,17 +4,17 @@ import os
 from dingtalk import DingTalk
 from alarm import Alarm
 
-secretTokenArn = os.environ['TOKEN_ARN']
+secretArn = os.environ['SECRET_ARN']
 
-# Get chat bot token from Secrets Manager
+# Get chat bot URL includes token from Secrets Manager
 secret_manager_client = boto3.client('secretsmanager')
 get_secret_value_response = secret_manager_client.get_secret_value(
-        SecretId=secretTokenArn
+        SecretId=secretArn
     )
-secretToken = get_secret_value_response['SecretString']
+secretURL = get_secret_value_response['SecretString']
 
 # Initial DingTalk handler
-dingtalk=DingTalk(secretToken)
+dingtalk=DingTalk(secretURL)
 
 def lambda_handler(event, context):
     print(event)
