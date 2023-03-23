@@ -17,6 +17,9 @@
 获取自定义机器人的 Webhook URL，作为部署的参数
 ![获取webhook](images/webhook.png)
 
+注意：推荐钉钉机器人安全设置选择“自定义关键词”，录入“告警”、“健康事件”作为默认关键词，后续可根据需要再进行定制
+![](images/dingtalk-sec-setting.png)
+
 ## 在 Serverless Application Repository 中部署此应用
 
 可以在 SAR 中搜索 `DingTalk-notifier` 查到本应用（注意因为本项目会创建 EventBridge 到 SNS Publish 权限，所以按下图进行勾选。
