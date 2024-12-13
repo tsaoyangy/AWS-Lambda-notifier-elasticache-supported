@@ -42,6 +42,13 @@ LLM 参数均为可选，默认值如上图所示。自定义 System Prompt 请�
 
 ![提示效果](images/notification.png)
 
+## ElastiCache事件提示效果
+
+目前ElastiCache在EventBridge中默认集成的事件不包含ElastiCache事件中的所有类型，因此，对于需要监控ElastiCache事件的用户而言，请参考[文档](https://docs.aws.amazon.com/zh_cn/AmazonElastiCache/latest/dg/ECEvents.SNS.html)将SNS与ElastiCache集成，并更新[lambda](notifier/app.py)中的代码实现ElastiCache事件解析并告警。
+ElastiCache的事件提示效果如下：
+
+![ElastiCache提示效果](images/elasticache_alert.png)
+
 ## 通过 LLM 进行消息整理效果
 
 原消息：
@@ -56,6 +63,7 @@ LLM 参数均为可选，默认值如上图所示。自定义 System Prompt 请�
 * AWS Health Abuse Event
 * EC2 Instance State-change
 * CloudWatch Alarm State Change
+
 
 ## 致谢
 
