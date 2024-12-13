@@ -1,5 +1,6 @@
 import boto3
 import os
+import json
 
 from botocore.exceptions import ClientError
 
@@ -18,12 +19,12 @@ systemPrompt = os.environ['System_Prompt']
 # Get chat bot URL includes token from Secrets Manager
 secret_manager_client = boto3.client('secretsmanager')
 get_secret_value_response = secret_manager_client.get_secret_value(
-        SecretId=secretArn
-    )
+    SecretId=secretArn
+)
 secretURL = get_secret_value_response['SecretString']
 
 # Initial DingTalk handler
-dingtalk=DingTalk(secretURL)
+dingtalk = DingTalk(secretURL)
 
 # Convert string to boolean
 def str_to_bool(str):
@@ -33,11 +34,25 @@ def str_to_bool(str):
         return False
     else:
         return False
-
+        
 def lambda_handler(event, context):
     print(event)
-    msg = msg_format(event)
-    print("Original message:" + msg)
+
+    message = event['Records'][0]['Sns']['Message']
+    
+    if "ElastiCache:Failover" in message:
+        msg = elasticache_msg_format(event)
+        print("ElastiCache message:" + msg)
+    elif "ElastiCache" in message:
+        # 如果是其他的 ElastiCache 事件，不进行处理
+        print("Other ElastiCache event, no formatting applied.")
+        return {
+            "statusCode": 200,
+            "body": "No action taken for other ElastiCache events."
+        }
+    else:
+        msg = msg_format(event)
+        print("Original message:" + msg)
 
     enableLlmBool = str_to_bool(enableLlm)
     enableDebugBool = str_to_bool(enableDebug)
@@ -56,7 +71,6 @@ def lambda_handler(event, context):
             print(err.response["Error"]["Message"])
 
     dtAlarm = Alarm(
-
         description=msg,
     )
 
@@ -71,15 +85,23 @@ def lambda_handler(event, context):
 
 def msg_format(event):
     try:
-        #消息来源是SNS，取 $.Records[0].Sns.Message，并对字符串进行一些处理，确保发送时可以正常显示
+        # 消息来源是SNS，取 $.Records[0].Sns.Message，并对字符串进行一些处理，确保发送时可以正常显示
         msg = event['Records'][0]['Sns']['Message']
 
-        #进行字符串处理后返回，以确保IM客户端正确显示
+        # 进行字符串处理后返回，以确保IM客户端正确显示
         msg = msg.replace("\\n", "\n")
-        if msg[0] == '\"' and msg[-1] == '\"' :
+        if msg[0] == '\"' and msg[-1] == '\"':
             msg = msg[1:-1]
 
         return msg
     except:
-        #消息来源不是SNS，直接返回
+        # 消息来源不是SNS，直接返回
         return event
+        
+# elasticache消息格式化函数        
+def elasticache_msg_format(event):
+    sns_msg = json.loads(event['Records'][0]['Sns']['Message'])
+    event_time = event['Records'][0]['Sns']['Timestamp']
+    event_region = event['Records'][0]['EventSubscriptionArn'].split(':')[3]
+    formatted_msg = f"ElastiCache事件报警:\n事件发生时间: {event_time}\n区域: {event_region}\n事件详情：{sns_msg}"
+    return formatted_msg
